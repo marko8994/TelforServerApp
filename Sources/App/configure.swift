@@ -12,6 +12,7 @@ public func configure(_ app: Application) throws {
     app.migrations.add(CreateAuthor())
     app.migrations.add(CreateRoom())
     app.migrations.add(CreatePaper())
+    app.migrations.add(CreateAuthorPaper())
 
     // register routes
     try routes(app)
