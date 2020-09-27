@@ -33,7 +33,10 @@ final class Paper: Model, Content {
     var questionsFormPath: String?
     
     @Parent(key: "room_id")
-    var room: Room
+    var room: Room    
+    
+    @Siblings(through: AuthorPaper.self, from: \.$paper, to: \.$author)
+    var authors: [Author]
 
     init() { }
 

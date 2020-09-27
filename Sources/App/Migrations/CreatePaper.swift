@@ -24,4 +24,5 @@ struct CreatePaper: Migration {
     func revert(on database: Database) -> EventLoopFuture<Void> {
         return database.schema("papers").delete()
     }
+    
 }
