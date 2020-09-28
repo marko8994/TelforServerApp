@@ -23,6 +23,9 @@ final class Author: Model, Content {
     
     @Field(key: "biography")
     var biography: String?
+    
+    @Siblings(through: AuthorPaper.self, from: \.$author, to: \.$paper)
+    var papers: [Paper]
 
     init() { }
 

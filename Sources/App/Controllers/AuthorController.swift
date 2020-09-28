@@ -1,5 +1,26 @@
 import Fluent
 import Vapor
+import FluentPostgresDriver
+
+final class AuthorController: RouteCollection {
+    
+    func boot(routes: RoutesBuilder) throws {
+        let userAuthorRoutes = routes.grouped("api", "u", "author")
+        let adminAuthorRoutes = routes.grouped("api", "a", "author")
+        userAuthorRoutes.get("getAll", use: index)
+        adminAuthorRoutes.post("add", use: create)
+    }
+    
+    func create(req: Request) throws -> EventLoopFuture<Author> {
+        let author = try req.content.decode(Author.self)
+        return author.save(on: req.db).map { author }
+    }
+    
+    func index(req: Request) throws -> EventLoopFuture<[Author]> {
+        return Author.query(on: req.db).all()
+    }
+    
+}
 
 //struct AuthorController: RouteCollection {
 //    func boot(routes: RoutesBuilder) throws {
@@ -9,15 +30,6 @@ import Vapor
 //        todos.group(":todoID") { todo in
 //            todo.delete(use: delete)
 //        }
-//    }
-//
-//    func index(req: Request) throws -> EventLoopFuture<[Todo]> {
-//        return Todo.query(on: req.db).all()
-//    }
-//
-//    func create(req: Request) throws -> EventLoopFuture<Todo> {
-//        let todo = try req.content.decode(Todo.self)
-//        return todo.save(on: req.db).map { todo }
 //    }
 //
 //    func delete(req: Request) throws -> EventLoopFuture<HTTPStatus> {
