@@ -49,15 +49,14 @@ final class MainController: RouteCollection {
                 LightAuthor(id: author.id ?? UUID(), name: author.name, imagePath: author.imagePath)
             }
         }
-        let papers = Paper.query(on: req.db).with(\.$authors).limit(limit)
-            .all().flatMapThrowing { papers in
-        papers.map { paper in
-            LightPaper(id: paper.id ?? UUID(), title: paper.title, authorNames: paper.authors.map {$0.name})
+        let papers = Paper.query(on: req.db).with(\.$authors).limit(limit).all().flatMapThrowing { papers in
+            papers.map { paper in
+                LightPaper(id: paper.id ?? UUID(), title: paper.title, authorNames: paper.authors.map {$0.name})
             }
         }
         let rooms = Room.query(on: req.db).limit(limit).all().flatMapThrowing { rooms in
-        rooms.map { room in
-            LightRoom(id: room.id ?? UUID(), name: room.name)
+            rooms.map { room in
+                LightRoom(id: room.id ?? UUID(), name: room.name)
             }
         }
         return authors.and(papers).and(rooms).map { (authorAndPapers, rooms) -> (HomeData) in
