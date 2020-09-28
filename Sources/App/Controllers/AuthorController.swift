@@ -13,7 +13,7 @@ final class AuthorController: RouteCollection {
         let userAuthorRoutes = routes.grouped("api", "u", "author")
         let adminAuthorRoutes = routes.grouped("api", "a", "author")
         userAuthorRoutes.get("getAll", use: index)
-        userAuthorRoutes.get(":authorId", use: getUser)
+        userAuthorRoutes.get(":authorId", use: getAuthor)
         adminAuthorRoutes.post("add", use: create)
     }
     
@@ -26,7 +26,7 @@ final class AuthorController: RouteCollection {
         return Author.query(on: req.db).all()
     }
     
-    func getUser(req: Request) throws -> EventLoopFuture<AuthorResponse> {
+    func getAuthor(req: Request) throws -> EventLoopFuture<AuthorResponse> {
         guard let authorId = req.parameters.get("authorId", as: UUID.self) else { throw Abort(.badRequest) }
         let author = Author.find(authorId, on: req.db).unwrap(or: Abort(.notFound))
         let papers = Paper.query(on: req.db).join(AuthorPaper.self, on: \Paper.$id == \AuthorPaper.$paper.$id)
