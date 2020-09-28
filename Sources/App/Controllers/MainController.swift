@@ -13,13 +13,13 @@ import Fluent
 struct LightPaper: Content {
     let id: UUID
     let title: String
-    let authorName: [String]
+    let authorNames: [String]?
 }
 
 struct LightAuthor: Content {
     let id: UUID
     let name: String
-    let imagePath: String
+    let imagePath: String?
 }
 
 struct LightRoom: Content {
@@ -28,9 +28,9 @@ struct LightRoom: Content {
 }
 
 struct HomeData: Content {
-    let authors: [Author]
-    let papers: [Paper]
-    let rooms: [Room]
+    let authors: [LightAuthor]
+    let papers: [LightPaper]
+    let rooms: [LightRoom]
 }
 
 final class MainController: RouteCollection {
@@ -42,19 +42,30 @@ final class MainController: RouteCollection {
     }
     
     func getAll(req: Request) throws -> EventLoopFuture<HomeData> {
-        let authors = Author.query(on: req.db).all()
-        let papers = Paper.query(on: req.db).all()
-        let rooms = Room.query(on: req.db).all()
-//        let authors = Author.query(on: req.db).field(\.$id).field(\.$name).field(\.$imagePath).all()
-//        let papers = Paper.query(on: req.db).field(\.$id).field(\.$title).all()
-//        let rooms = Room.query(on: req.db).field(\.$id).field(\.$name).all()
-        return authors.and(papers).and(rooms).map { (arg0, rooms) -> (HomeData) in
-            let (authors, papers) = arg0
+        let limit = try req.query.get(Int.self, at: "limit")
+        let authors = Author.query(on: req.db).limit(limit).all().flatMapThrowing { authors in
+            authors.map { author in
+                LightAuthor(id: author.id ?? UUID(), name: author.name, imagePath: author.imagePath)
+            }
+        }
+        let papers = Paper.query(on: req.db).with(\.$authors).limit(limit)
+            .all().flatMapThrowing { papers in
+        papers.map { paper in
+            LightPaper(id: paper.id ?? UUID(), title: paper.title, authorNames: paper.authors.map {$0.name})
+            }
+        }
+        let rooms = Room.query(on: req.db).limit(limit).all().flatMapThrowing { rooms in
+        rooms.map { room in
+            LightRoom(id: room.id ?? UUID(), name: room.name)
+            }
+        }
+        return authors.and(papers).and(rooms).map { (authorAndPapers, rooms) -> (HomeData) in
+            let (authors, papers) = authorAndPapers
             return HomeData(authors: authors, papers: papers, rooms: rooms)
         }
     }
-    
+}
+
 //    func getMoreInfo(req: Request) throws -> EventLoopFuture<[Room]> {
 //        return Paper.query(on: req.db).all()
 //    }
-}
