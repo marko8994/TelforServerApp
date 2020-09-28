@@ -28,6 +28,7 @@ struct LightRoom: Content {
 }
 
 struct HomeData: Content {
+    let imagePath: String
     let authors: [LightAuthor]
     let papers: [LightPaper]
     let rooms: [LightRoom]
@@ -37,7 +38,7 @@ final class MainController: RouteCollection {
     
     func boot(routes: RoutesBuilder) throws {
         let mainRoutes = routes.grouped("api", "u")
-        mainRoutes.get("getAll", use: getAll)
+        mainRoutes.get("home", "getAll", use: getAll)
 //        mainRoutes.get("moreInfo", use: getMoreInfo)
     }
     
@@ -61,7 +62,8 @@ final class MainController: RouteCollection {
         }
         return authors.and(papers).and(rooms).map { (authorAndPapers, rooms) -> (HomeData) in
             let (authors, papers) = authorAndPapers
-            return HomeData(authors: authors, papers: papers, rooms: rooms)
+            return HomeData(imagePath: "https://i.imgur.com/mc9EqKh.jpeg",
+                            authors: authors, papers: papers, rooms: rooms)
         }
     }
 }

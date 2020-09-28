@@ -2,12 +2,18 @@ import Fluent
 import Vapor
 import FluentPostgresDriver
 
+public struct AuthorResponse: Content {
+    let author: Author
+    let papers: [LightPaper]
+}
+
 final class AuthorController: RouteCollection {
     
     func boot(routes: RoutesBuilder) throws {
         let userAuthorRoutes = routes.grouped("api", "u", "author")
         let adminAuthorRoutes = routes.grouped("api", "a", "author")
         userAuthorRoutes.get("getAll", use: index)
+        userAuthorRoutes.get(":authorId", use: getUser)
         adminAuthorRoutes.post("add", use: create)
     }
     
@@ -20,17 +26,21 @@ final class AuthorController: RouteCollection {
         return Author.query(on: req.db).all()
     }
     
+    func getUser(req: Request) throws -> EventLoopFuture<AuthorResponse> {
+        guard let authorId = req.parameters.get("authorId", as: UUID.self) else { throw Abort(.badRequest) }
+        let author = Author.find(authorId, on: req.db).unwrap(or: Abort(.notFound))
+        let papers = Paper.query(on: req.db).join(AuthorPaper.self, on: \Paper.$id == \AuthorPaper.$paper.$id)
+            .filter(AuthorPaper.self, \AuthorPaper.$author.$id == authorId).with(\.$authors).all()
+            .flatMapThrowing { papers in
+                papers.map { paper in
+                LightPaper(id: paper.id ?? UUID(), title: paper.title, authorNames: paper.authors.map {$0.name})
+                }
+            }
+        return author.and(papers).map { (author, papers) -> (AuthorResponse) in
+            AuthorResponse(author: author, papers: papers)
+        }
+    }
 }
-
-//struct AuthorController: RouteCollection {
-//    func boot(routes: RoutesBuilder) throws {
-//        let todos = routes.grouped("author")
-//        todos.get(use: index)
-//        todos.post(use: create)
-//        todos.group(":todoID") { todo in
-//            todo.delete(use: delete)
-//        }
-//    }
 //
 //    func delete(req: Request) throws -> EventLoopFuture<HTTPStatus> {
 //        return Todo.find(req.parameters.get("todoID"), on: req.db)
