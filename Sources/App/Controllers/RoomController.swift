@@ -9,11 +9,6 @@ import Foundation
 import Vapor
 import Fluent
 
-public struct RoomResponse: Content {
-    let room: Room
-    let papers: [LightPaper]
-}
-
 final class RoomController: RouteCollection {
     
     func boot(routes: RoutesBuilder) throws {
@@ -35,15 +30,13 @@ final class RoomController: RouteCollection {
     
     func getRoom(req: Request) throws -> EventLoopFuture<RoomResponse> {
         guard let roomId = req.parameters.get("roomId", as: UUID.self) else { throw Abort(.badRequest) }
-        let room = Room.find(roomId, on: req.db).unwrap(or: Abort(.notFound))
-        let papers = Paper.query(on: req.db).filter(\.$room.$id == roomId).with(\.$authors).all()
-            .flatMapThrowing { papers in
-                papers.map { paper in
-                LightPaper(id: paper.id ?? UUID(), title: paper.title, authorNames: paper.authors.map {$0.name})
+        return Room.query(on: req.db).filter(\.$id == roomId).with(\.$papers).first().unwrap(or: Abort(.notFound))
+            .map { roomWithPapers in
+                let lightPapers = roomWithPapers.papers.map {
+                    LightPaper(id: $0.id, title: $0.title, authorNames: $0.authorNames)
                 }
-            }
-        return room.and(papers).map { (room, papers) -> (RoomResponse) in
-            RoomResponse(room: room, papers: papers)
+                return RoomResponse(id: roomWithPapers.id, name: roomWithPapers.name,
+                                    mapPath: roomWithPapers.mapPath, papers: lightPapers)
         }
     }
 }

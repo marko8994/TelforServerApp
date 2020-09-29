@@ -9,22 +9,6 @@ import Foundation
 import Vapor
 import Fluent
 
-struct AddAuthorRequest: Content {
-    var paperId: String
-    var authorId: String
-}
-
-struct PaperResponse: Content {
-    let id: UUID?
-    let title: String
-    let type: String
-    let presentationDate: Date
-    let summary: String?
-    let questionsFormPath: String?
-    var room: LightRoom
-    let authors: [LightAuthor]
-}
-
 final class PaperController: RouteCollection {
     
     func boot(routes: RoutesBuilder) throws {

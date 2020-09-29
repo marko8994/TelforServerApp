@@ -2,11 +2,6 @@ import Fluent
 import Vapor
 import FluentPostgresDriver
 
-public struct AuthorResponse: Content {
-    let author: Author
-    let papers: [LightPaper]
-}
-
 final class AuthorController: RouteCollection {
     
     func boot(routes: RoutesBuilder) throws {
@@ -28,16 +23,15 @@ final class AuthorController: RouteCollection {
     
     func getAuthor(req: Request) throws -> EventLoopFuture<AuthorResponse> {
         guard let authorId = req.parameters.get("authorId", as: UUID.self) else { throw Abort(.badRequest) }
-        let author = Author.find(authorId, on: req.db).unwrap(or: Abort(.notFound))
-        let papers = Paper.query(on: req.db).join(AuthorPaper.self, on: \Paper.$id == \AuthorPaper.$paper.$id)
-            .filter(AuthorPaper.self, \AuthorPaper.$author.$id == authorId).with(\.$authors).all()
-            .flatMapThrowing { papers in
-                papers.map { paper in
-                LightPaper(id: paper.id ?? UUID(), title: paper.title, authorNames: paper.authors.map {$0.name})
+        return Author.query(on: req.db).filter(\.$id == authorId).with(\.$papers).first().unwrap(or: Abort(.notFound))
+            .map { authorWithPapers in
+                let lightPapers = authorWithPapers.papers.map {
+                    LightPaper(id: $0.id, title: $0.title, authorNames: $0.authorNames)
                 }
-            }
-        return author.and(papers).map { (author, papers) -> (AuthorResponse) in
-            AuthorResponse(author: author, papers: papers)
+                return AuthorResponse(id: authorWithPapers.id, name: authorWithPapers.name,
+                                      organization: authorWithPapers.organization,
+                                      position: authorWithPapers.organization, imagePath: authorWithPapers.imagePath,
+                                      biography: authorWithPapers.biography, papers: lightPapers)
         }
     }
 }

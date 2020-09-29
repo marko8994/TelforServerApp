@@ -10,37 +10,12 @@ import Foundation
 import Vapor
 import Fluent
 
-struct LightPaper: Content {
-    let id: UUID?
-    let title: String
-    let authorNames: [String]?
-}
-
-struct LightAuthor: Content {
-    let id: UUID?
-    let name: String
-    let imagePath: String?
-}
-
-struct LightRoom: Content {
-    let id: UUID?
-    let name: String
-}
-
-struct HomeData: Content {
-    let name: String
-    let imagePath: String
-    let authors: [LightAuthor]
-    let papers: [LightPaper]
-    let rooms: [LightRoom]
-}
-
 final class MainController: RouteCollection {
     
     func boot(routes: RoutesBuilder) throws {
         let mainRoutes = routes.grouped("api", "u")
         let mainAdminRoutes = routes.grouped("api", "a")
-        mainRoutes.get("home", "getAll", use: getAll)
+        mainRoutes.get("home", use: getAll)
         mainRoutes.get("info", use: getInfo)
         mainAdminRoutes.post("conference", "add", use: createConference)
     }
@@ -53,10 +28,8 @@ final class MainController: RouteCollection {
                 LightAuthor(id: author.id ?? UUID(), name: author.name, imagePath: author.imagePath)
             }
         }
-        let papers = Paper.query(on: req.db).with(\.$authors).limit(limit).all().flatMapThrowing { papers in
-            papers.map { paper in
-                LightPaper(id: paper.id ?? UUID(), title: paper.title, authorNames: paper.authors.map {$0.name})
-            }
+        let papers = Paper.query(on: req.db).limit(limit).all().flatMapThrowing { papers in
+            papers.map { LightPaper(id: $0.id, title: $0.title, authorNames: $0.authorNames) }
         }
         let rooms = Room.query(on: req.db).limit(limit).all().flatMapThrowing { rooms in
             rooms.map { room in
@@ -65,7 +38,7 @@ final class MainController: RouteCollection {
         }
         return info.and(authors).and(papers).and(rooms).map { (arguments) -> (HomeData) in
             let (((conference, authors), papers), rooms) = arguments
-            return HomeData(name: conference.name, imagePath: conference.imagePaths,
+            return HomeData(name: conference.name, imagePaths: conference.imagePaths,
                             authors: authors, papers: papers, rooms: rooms)
         }
     }
