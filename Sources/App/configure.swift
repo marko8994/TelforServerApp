@@ -15,6 +15,7 @@ public func configure(_ app: Application) throws {
     app.migrations.add(CreateAuthorPaper())
     app.migrations.add(UpdatePaperDateField())
     app.migrations.add(CreateConference())
+    app.migrations.add(AddAuthorNamesToPaper())
 
     // register routes
     try routes(app)

@@ -2,23 +2,22 @@
 //  File.swift
 //  
 //
-//  Created by Marko Mladenovic on 28/09/2020.
+//  Created by Marko Mladenovic on 29/09/2020.
 //
 
 import Foundation
 import Fluent
 
-
-struct UpdatePaperDateField: Migration {
+struct AddAuthorNamesToPaper: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {
         return database.schema("papers")
-            .updateField("presentation_date", .datetime)
+            .field("author_names", .string)
             .update()
     }
 
     func revert(on database: Database) -> EventLoopFuture<Void> {
         return database.schema("papers")
-            .updateField("presentation_date", .date)
+            .deleteField("author_names")
             .update()
     }
     

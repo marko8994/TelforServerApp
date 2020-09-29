@@ -32,6 +32,9 @@ final class Paper: Model, Content {
     @Field(key: "questions_form_path")
     var questionsFormPath: String?
     
+    @Field(key: "author_names")
+    var authorNames: String?
+    
     @Parent(key: "room_id")
     var room: Room    
     
