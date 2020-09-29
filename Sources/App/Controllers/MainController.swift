@@ -11,19 +11,19 @@ import Vapor
 import Fluent
 
 struct LightPaper: Content {
-    let id: UUID
+    let id: UUID?
     let title: String
     let authorNames: [String]?
 }
 
 struct LightAuthor: Content {
-    let id: UUID
+    let id: UUID?
     let name: String
     let imagePath: String?
 }
 
 struct LightRoom: Content {
-    let id: UUID
+    let id: UUID?
     let name: String
 }
 
