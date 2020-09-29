@@ -15,7 +15,13 @@ struct AddAuthorRequest: Content {
 }
 
 struct PaperResponse: Content {
-    let paper: Paper
+    let id: UUID?
+    let title: String
+    let type: String
+    let presentationDate: Date
+    let summary: String?
+    let questionsFormPath: String?
+    var room: LightRoom
     let authors: [LightAuthor]
 }
 
@@ -44,16 +50,17 @@ final class PaperController: RouteCollection {
     
     func getPaper(req: Request) throws -> EventLoopFuture<PaperResponse> {
         guard let paperId = req.parameters.get("paperId", as: UUID.self) else { throw Abort(.badRequest) }
-        let paper = Paper.query(on: req.db).filter(\.$id == paperId).with(\.$room).first().unwrap(or: Abort(.notFound))
-        let authors = Author.query(on: req.db).join(AuthorPaper.self, on: \Author.$id == \AuthorPaper.$author.$id)
-            .filter(AuthorPaper.self, \AuthorPaper.$paper.$id == paperId).all()
-            .flatMapThrowing { authors in
-                authors.map { author in
-                    LightAuthor(id: author.id ?? UUID(), name: author.name, imagePath: author.imagePath)
+        return Paper.query(on: req.db).filter(\.$id == paperId).with(\.$authors).with(\.$room).first()
+            .unwrap(or: Abort(.notFound)).map { paperWithAuthors in
+                let lightAuthors = paperWithAuthors.authors.map {
+                    LightAuthor(id: $0.id, name: $0.name, imagePath: $0.imagePath)
                 }
-            }
-        return paper.and(authors).map { (paper, authors) -> (PaperResponse) in
-            PaperResponse(paper: paper, authors: authors)
+                return PaperResponse(id: paperWithAuthors.id, title: paperWithAuthors.title,
+                                     type: paperWithAuthors.type, presentationDate: paperWithAuthors.presentationDate,
+                                     summary: paperWithAuthors.summary,
+                                     questionsFormPath: paperWithAuthors.questionsFormPath,
+                                     room: LightRoom(id: paperWithAuthors.room.id, name: paperWithAuthors.room.name),
+                                     authors: lightAuthors)
         }
     }
     
