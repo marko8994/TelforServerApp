@@ -41,11 +41,3 @@ final class AuthorController: RouteCollection {
         }
     }
 }
-//
-//    func delete(req: Request) throws -> EventLoopFuture<HTTPStatus> {
-//        return Todo.find(req.parameters.get("todoID"), on: req.db)
-//            .unwrap(or: Abort(.notFound))
-//            .flatMap { $0.delete(on: req.db) }
-//            .transform(to: .ok)
-//    }
-//}
