@@ -30,13 +30,13 @@ final class RoomController: RouteCollection {
     
     func getRoom(req: Request) throws -> EventLoopFuture<RoomResponse> {
         guard let roomId = req.parameters.get("roomId", as: UUID.self) else { throw Abort(.badRequest) }
-        return Room.query(on: req.db).filter(\.$id == roomId).with(\.$papers).first().unwrap(or: Abort(.notFound))
-            .map { roomWithPapers in
-                let lightPapers = roomWithPapers.papers.map {
-                    LightPaper(id: $0.id, title: $0.title, authorNames: $0.authorNames)
+        return Room.query(on: req.db).filter(\.$id == roomId).with(\.$sessions).first().unwrap(or: Abort(.notFound))
+            .map { roomWithSessions in
+                let lightSessions = roomWithSessions.sessions.map {
+                    LightSession(id: $0.id, name: $0.name, date: $0.date)
                 }
-                return RoomResponse(id: roomWithPapers.id, name: roomWithPapers.name,
-                                    mapPath: roomWithPapers.mapPath, papers: lightPapers)
+                return RoomResponse(id: roomWithSessions.id, name: roomWithSessions.name,
+                                    mapPath: roomWithSessions.mapPath, sessions: lightSessions)
         }
     }
 }

@@ -22,7 +22,11 @@ final class PaperController: RouteCollection {
     
     func create(req: Request) throws -> EventLoopFuture<Paper> {
         let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .secondsSince1970
+        let dateFormater = DateFormatter()
+        dateFormater.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        dateFormater.locale = Locale.current
+        dateFormater.timeZone = TimeZone.current
+        decoder.dateDecodingStrategy = .formatted(dateFormater)
         let paper = try req.content.decode(Paper.self,
                                            using: decoder)
         return paper.save(on: req.db).map { paper }

@@ -26,6 +26,9 @@ final class Room: Model, Content {
     @Children(for: \.$room)
     var papers: [Paper]
     
+    @Children(for: \.$room)
+    var sessions: [Session]
+    
     init() { }
 
     init(id: UUID? = nil, name: String, mapPath: String) {

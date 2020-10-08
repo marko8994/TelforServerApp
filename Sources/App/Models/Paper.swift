@@ -36,7 +36,10 @@ final class Paper: Model, Content {
     var authorNames: String?
     
     @Parent(key: "room_id")
-    var room: Room    
+    var room: Room
+    
+    @Parent(key: "session_id")
+    var session: Session
     
     @Siblings(through: AuthorPaper.self, from: \.$paper, to: \.$author)
     var authors: [Author]
