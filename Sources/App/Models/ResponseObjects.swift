@@ -8,7 +8,13 @@
 import Foundation
 import Vapor
 
-struct HomeData: Content {
+struct PrimaryInfoResponse: Content {
+    let name: String
+    let imagePaths: String
+    let sections: [SectionResponse]
+}
+
+struct SecondaryInfoResponse: Content {
     let name: String
     let imagePaths: String
     let authors: [LightAuthor]
@@ -46,7 +52,22 @@ public struct RoomResponse: Content {
     let id: UUID?
     let name: String
     let mapPath: String
-    let papers: [LightPaper]?
+    let sessions: [LightSession]?
+}
+
+public struct SectionResponse: Content {
+    let id: UUID?
+    let name: String
+    let sessions: [LightSession]?
+}
+
+public struct SessionResponse: Content {
+    let id: UUID?
+    let name: String
+    let date: Date
+    let papers: [LightPaper]
+    let room: LightRoom
+    let chairpersons: [LightAuthor]
 }
 
 struct LightAuthor: Content {
@@ -65,3 +86,11 @@ struct LightRoom: Content {
     let id: UUID?
     let name: String
 }
+
+struct LightSession: Content {
+    let id: UUID?
+    let name: String
+    let date: Date
+}
+
+

@@ -7,4 +7,6 @@ func routes(_ app: Application) throws {
     try app.register(collection: AuthorController())
     try app.register(collection: PaperController())
     try app.register(collection: RoomController())
+    try app.register(collection: SectionController())
+    try app.register(collection: SessionController())
 }

@@ -30,7 +30,7 @@ final class AuthorController: RouteCollection {
                 }
                 return AuthorResponse(id: authorWithPapers.id, name: authorWithPapers.name,
                                       organization: authorWithPapers.organization,
-                                      position: authorWithPapers.organization, imagePath: authorWithPapers.imagePath,
+                                      position: authorWithPapers.position, imagePath: authorWithPapers.imagePath,
                                       biography: authorWithPapers.biography, papers: lightPapers)
         }
     }

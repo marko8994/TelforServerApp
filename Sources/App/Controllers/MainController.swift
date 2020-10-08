@@ -15,12 +15,30 @@ final class MainController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let mainRoutes = routes.grouped("api", "u")
         let mainAdminRoutes = routes.grouped("api", "a")
-        mainRoutes.get("home", use: getAll)
-        mainRoutes.get("info", use: getInfo)
+        mainRoutes.get("primaryInfo", use: getPrimaryInfo)
+        mainRoutes.get("secondaryInfo", use: getSecondaryInfo)
+        mainRoutes.get("tertiaryInfo", use: getTertiaryInfo)
         mainAdminRoutes.post("conference", "add", use: createConference)
     }
     
-    func getAll(req: Request) throws -> EventLoopFuture<HomeData> {
+    func getPrimaryInfo(req: Request) throws -> EventLoopFuture<PrimaryInfoResponse> {
+        let info = Conference.query(on: req.db).field(\.$name).field(\.$imagePaths).first().unwrap(or: Abort(.notFound))
+        let sections = Section.query(on: req.db).with(\.$sessions).all().map { sectionsWithSessions in
+            sectionsWithSessions.map { sectionWithSessions -> SectionResponse in
+                    let lightSessions = sectionWithSessions.sessions.map {
+                    LightSession(id: $0.id, name: $0.name, date: $0.date)
+                }
+                return SectionResponse(id: sectionWithSessions.id,
+                                       name: sectionWithSessions.name,
+                                       sessions: lightSessions)
+            }
+        }
+        return info.and(sections).map { (info, sections) -> (PrimaryInfoResponse) in
+            return PrimaryInfoResponse(name: info.name, imagePaths: info.imagePaths, sections: sections)
+        }
+    }
+    
+    func getSecondaryInfo(req: Request) throws -> EventLoopFuture<SecondaryInfoResponse> {
         let limit = try req.query.get(Int.self, at: "limit")
         let info = Conference.query(on: req.db).field(\.$name).field(\.$imagePaths).first().unwrap(or: Abort(.notFound))
         let authors = Author.query(on: req.db).limit(limit).all().flatMapThrowing { authors in
@@ -36,14 +54,14 @@ final class MainController: RouteCollection {
                 LightRoom(id: room.id ?? UUID(), name: room.name)
             }
         }
-        return info.and(authors).and(papers).and(rooms).map { (arguments) -> (HomeData) in
+        return info.and(authors).and(papers).and(rooms).map { (arguments) -> (SecondaryInfoResponse) in
             let (((conference, authors), papers), rooms) = arguments
-            return HomeData(name: conference.name, imagePaths: conference.imagePaths,
+            return SecondaryInfoResponse(name: conference.name, imagePaths: conference.imagePaths,
                             authors: authors, papers: papers, rooms: rooms)
         }
     }
 
-    func getInfo(req: Request) throws -> EventLoopFuture<Conference> {
+    func getTertiaryInfo(req: Request) throws -> EventLoopFuture<Conference> {
         return Conference.query(on: req.db).first().unwrap(or: Abort(.notFound))
     }
     

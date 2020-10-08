@@ -26,6 +26,9 @@ final class Author: Model, Content {
     
     @Siblings(through: AuthorPaper.self, from: \.$author, to: \.$paper)
     var papers: [Paper]
+    
+    @Siblings(through: SessionAuthor.self, from: \.$author, to: \.$session)
+    var sessions: [Session]
 
     init() { }
 
